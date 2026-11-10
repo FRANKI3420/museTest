@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>ネスペ午後 単語テスト（ローカル保存版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F4EF; --surface:#FFFFFF; --surface2:#ECEEE6; --ink:#1B2420; --muted:#5C6A62;
+  --line:#D8DCD2; --accent:#0E6B5C; --accent-ink:#FFFFFF; --accent-soft:#DDEEE8;
+  --amber:#8A5A00; --amber-bg:#FBF0D3; --danger:#B3261E; --danger-bg:#FBE7E4;
+  --ok:#0E6B5C; --ok-bg:#DDEEE8; --chip:#ECEEE6;
+  --shadow:0 1px 2px rgba(20,30,25,.06),0 8px 24px rgba(20,30,25,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111513; --surface:#1B201D; --surface2:#242A26; --ink:#E9EDEA; --muted:#9AA79E;
+    --line:#333B35; --accent:#45BFA6; --accent-ink:#0B1512; --accent-soft:#1E3A32;
+    --amber:#E8B95A; --amber-bg:#3A2F14; --danger:#F0928A; --danger-bg:#3D201C;
+    --ok:#45BFA6; --ok-bg:#1E3A32; --chip:#242A26;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;line-height:1.65;font-size:16px}
+button,select,input{font:inherit;color:inherit}
+button,[role="button"],select,input[type="search"]{min-height:44px}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 64px}
+h1{font-family:"Noto Serif JP",serif;font-size:26px;line-height:1.35;margin:6px 0 4px;font-weight:900}
+.lede{color:var(--muted);margin:0 0 16px;font-size:14.5px}
+.lede strong{color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.stat .num{font-size:24px;font-weight:900;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat .lbl{font-size:12px;color:var(--muted);margin-top:2px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+.tab{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 18px;cursor:pointer;font-weight:700;font-size:14.5px}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:var(--shadow)}
+.card h2{font-size:18px;margin:0 0 12px}
+.field{margin:0 0 16px}
+.field label{display:block;font-weight:700;font-size:13.5px;margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14.5px;min-height:44px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.startbtn{width:100%;background:var(--accent);color:var(--accent-ink);border:none;border-radius:10px;padding:14px;font-size:17px;font-weight:900;cursor:pointer;min-height:52px}
+.startbtn:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:13px;color:var(--muted)}
+.qmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+.chip.hole{background:var(--amber-bg);color:var(--amber)}
+.chip.warn{background:var(--amber-bg);color:var(--amber)}
+.progress{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:16px}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .3s}
+@media (prefers-reduced-motion: reduce){.progress i{transition:none}}
+.qprompt{font-size:13px;color:var(--muted);margin:0 0 6px}
+.qmain{font-size:20px;font-weight:700;line-height:1.55;margin:0 0 18px;overflow-wrap:anywhere}
+.qmain.term{font-size:24px;font-weight:900}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:13px 15px;cursor:pointer;font-size:15.5px;line-height:1.55;width:100%;overflow-wrap:anywhere}
+.opt:hover{border-color:var(--accent)}
+.opt.correct{border-color:var(--ok);background:var(--ok-bg);font-weight:700}
+.opt.wrong{border-color:var(--danger);background:var(--danger-bg)}
+.opt.dim{opacity:.55}
+.opt:disabled{cursor:default}
+.fb{margin-top:16px;border-radius:10px;padding:14px 16px;font-size:14.5px}
+.fb.ok{background:var(--ok-bg)}
+.fb.ng{background:var(--danger-bg)}
+.fb h3{margin:0 0 6px;font-size:16px}
+.fb p{margin:4px 0}
+.nextbtn{margin-top:14px;width:100%;background:var(--ink);color:var(--bg);border:none;border-radius:10px;padding:13px;font-weight:900;cursor:pointer;font-size:16px;min-height:50px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input[type="search"]{flex:1 1 200px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface)}
+.toolbar select{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--muted)}
+.termcell{font-weight:700;overflow-wrap:anywhere}
+.defcell{overflow-wrap:anywhere}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;border-radius:999px;padding:1px 8px;margin:1px 2px 1px 0;background:var(--amber-bg);color:var(--amber);white-space:nowrap}
+.pill.acc-ok{background:var(--ok-bg);color:var(--ok)}
+.pill.acc-ng{background:var(--danger-bg);color:var(--danger)}
+.pill.acc-none{background:var(--chip);color:var(--muted)}
+.notecard{border:1px solid var(--line);border-left:5px solid var(--amber);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:var(--surface);font-size:14.5px}
+.notecard .where{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.histrow{display:flex;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:14.5px;flex-wrap:wrap}
+.dangerbtn{border:1px solid var(--danger);color:var(--danger);background:transparent;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:700}
+.empty{color:var(--muted);padding:18px 4px;font-size:14.5px}
+.resultbig{font-size:34px;font-weight:900;text-align:center;margin:6px 0}
+.resultsub{text-align:center;color:var(--muted);margin:0 0 16px}
+.wronglist{margin:0;padding-left:20px;font-size:14.5px}
+.wronglist li{margin-bottom:6px}
+footer{margin-top:28px;color:var(--muted);font-size:12.5px}
+@media (max-width:560px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  h1{font-size:22px}
+  .qmain{font-size:18px}.qmain.term{font-size:21px}
+  table,thead,tbody,tr,th,td{display:block}
+  thead{display:none}
+  tr{border-bottom:1px solid var(--line);padding:8px 0}
+  td{border:none;padding:3px 8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ネスペ午後 重点単語テスト</h1>
+  <p class="lede">午後試験の重点単語帳 <strong>全219語</strong>（穴埋め実績あり112語・⚠採点講評ノート21件）から4択で出題します。学習記録は<strong>この端末のブラウザ（ローカルストレージ）</strong>に保存され、開き直しても残ります。端末をまたいだ同期はされません。</p>
+
+  <div class="stats" aria-label="学習状況">
+    <div class="stat"><div class="num" id="stTerms">219</div><div class="lbl">収録用語</div></div>
+    <div class="stat"><div class="num" id="stTried">0</div><div class="lbl">挑戦済みの語</div></div>
+    <div class="stat"><div class="num" id="stAcc">―</div><div class="lbl">累計正答率</div></div>
+    <div class="stat"><div class="num" id="stWeak">0</div><div class="lbl">苦手な語</div></div>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="画面切替">
+    <button class="tab" role="tab" id="tabBtn-test" aria-selected="true" data-view="test">テスト</button>
+    <button class="tab" role="tab" id="tabBtn-gloss" aria-selected="false" data-view="gloss">単語帳</button>
+    <button class="tab" role="tab" id="tabBtn-notes" aria-selected="false" data-view="notes">⚠ 講評ノート</button>
+    <button class="tab" role="tab" id="tabBtn-record" aria-selected="false" data-view="record">記録</button>
+  </nav>
+
+  <!-- テスト設定 -->
+  <section id="view-test">
+    <div class="card" id="setupCard">
+      <h2>テストを始める</h2>
+      <div class="field">
+        <label>出題範囲</label>
+        <div class="seg" id="modeSeg">
+          <button data-mode="all" aria-pressed="true">全範囲（219語）</button>
+          <button data-mode="holes" aria-pressed="false">穴埋め実績のある語だけ（112語）</button>
+          <button data-mode="warn" aria-pressed="false">⚠付き用語</button>
+          <button data-mode="layer" aria-pressed="false">レイヤー別</button>
+          <button data-mode="weak" aria-pressed="false">苦手だけ</button>
+        </div>
+      </div>
+      <div class="field" id="layerField" hidden>
+        <label for="layerSel">レイヤー</label>
+        <select id="layerSel" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface)"></select>
+      </div>
+      <div class="field">
+        <label>問題数</label>
+        <div class="seg" id="countSeg">
+          <button data-count="10" aria-pressed="true">10問</button>
+          <button data-count="20" aria-pressed="false">20問</button>
+          <button data-count="30" aria-pressed="false">30問</button>
+        </div>
+      </div>
+      <p class="note">出題形式は「用語を見て正しい説明を選ぶ」と「説明を見て正しい用語を選ぶ」のミックスです。説明文の中に用語名そのものが入っている語は、答えが分かってしまうため「説明→用語」では出題しません。回答するとその場で正誤と定義が表示されます。</p>
+      <p class="note" id="poolNote"></p>
+      <button class="startbtn" id="startBtn">テスト開始</button>
+    </div>
+
+    <div class="card" id="quizCard" hidden>
+      <div class="qmeta">
+        <span class="chip" id="qCount"></span>
+        <span class="chip" id="qCat"></span>
+        <span class="chip hole" id="qHole" hidden></span>
+        <span class="chip warn" id="qWarn" hidden>⚠ 採点講評で指摘</span>
+      </div>
+      <div class="progress" aria-hidden="true"><i id="qProg"></i></div>
+      <p class="qprompt" id="qPrompt"></p>
+      <p class="qmain" id="qMain"></p>
+      <div class="opts" id="qOpts"></div>
+      <div id="qFb"></div>
+    </div>
+
+    <div class="card" id="resultCard" hidden>
+      <p class="qprompt" style="text-align:center">結果</p>
+      <p class="resultbig"><span id="rScore"></span></p>
+      <p class="resultsub" id="rSub"></p>
+      <h2 style="font-size:16px">間違えた問題</h2>
+      <ul class="wronglist" id="rWrong"></ul>
+      <p class="empty" id="rPerfect" hidden>全問正解です。この調子で次へ進みましょう。</p>
+      <button class="nextbtn" id="againBtn">設定に戻る</button>
+    </div>
+  </section>
+
+  <!-- 単語帳 -->
+  <section id="view-gloss" hidden>
+    <div class="card">
+      <h2>単語帳（全219語）</h2>
+      <div class="toolbar">
+        <input type="search" id="gSearch" placeholder="用語・定義で検索" aria-label="用語・定義で検索">
+        <select id="gLayer" aria-label="レイヤーで絞り込み"></select>
+      </div>
+      <p class="note" id="gCount"></p>
+      <table>
+        <thead><tr><th style="width:26%">用語</th><th>定義</th><th style="width:22%">記録</th></tr></thead>
+        <tbody id="gBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 講評ノート -->
+  <section id="view-notes" hidden>
+    <div class="card">
+      <h2>⚠ 採点講評ノート（21件）</h2>
+      <p class="note">公式採点講評で「正答率が低かった」「知らないと解けない」と指摘された知識です。フェーズ2の解き直しで間違えた問題と照らして読むと効果が高いと単語帳にあります。</p>
+      <div id="noteList"></div>
+    </div>
+  </section>
+
+  <!-- 記録 -->
+  <section id="view-record" hidden>
+    <div class="card">
+      <h2>テスト履歴</h2>
+      <div id="histList"></div>
+      <h2 style="margin-top:24px">苦手な語</h2>
+      <p class="note">一度でも間違えた語です。「苦手だけ」モードの出題対象になります。正解し続けると正答率が上がりますが、リストには残り続けます（記録タブでいつでも確認できます）。</p>
+      <div id="weakList"></div>
+      <h2 style="margin-top:24px">記録の管理</h2>
+      <p class="note">記録はこのブラウザのローカルストレージにだけ保存されています。ブラウザのデータを消去すると記録も消えます。</p>
+      <button class="dangerbtn" id="resetBtn">学習記録をすべて消す</button>
+      <p class="note" id="resetMsg" role="status"></p>
+    </div>
+  </section>
+
+  <footer>出典：ネットワークスペシャリスト午後試験 重点単語帳（レイヤー別）／「穴：R○ PM○-○」は令和3〜7年の本試験で実際に穴埋めの正答になった出題実績（IPA公式解答例）／⚠は公式採点講評で指摘された重要知識。</footer>
+</div>
+
+<script>
+"use strict";
+var DATA = {"terms": [{"term": "イーサネットフレーム", "def": "宛先/送信元MACアドレス＋タイプ＋データ＋FCSで構成される。スイッチは宛先MACを見て転送先を決める", "layer": "L1/L2 有線LAN", "sub": "スイッチとフレーム転送", "holes": [], "warn": false}, {"term": "MACアドレステーブル", "def": "ポートとMACアドレスの対応を学習した表。エージング（通常300秒）で古い登録が消える", "layer": "L1/L2 有線LAN", "sub": "スイッチとフレーム転送", "holes": ["R3 PM2-1"], "warn": false}, {"term": "フラッディング", "def": "宛先MACアドレスがテーブルに未登録のとき、そのVLANの全ポートにフレームを送る動作", "layer": "L1/L2 有線LAN", "sub": "スイッチとフレーム転送", "holes": ["R5 PM1-2", "R4 PM1-1"], "warn": false}, {"term": "プロミスキャスモード", "def": "NICが宛先を問わず全フレームを受け取るモード。パケットキャプチャや監視に使う", "layer": "L1/L2 有線LAN", "sub": "スイッチとフレーム転送", "holes": ["R4 PM1-1"], "warn": false}, {"term": "ブロードキャストドメイン", "def": "ブロードキャストが届く範囲＝VLANの範囲。これを越える通信にはL3のルーティングが要る", "layer": "L1/L2 有線LAN", "sub": "スイッチとフレーム転送", "holes": [], "warn": false}, {"term": "ジャンボフレーム", "def": "MTU 1500を超える大きなフレーム。経路上の全機器でMTUを揃える必要がある", "layer": "L1/L2 有線LAN", "sub": "スイッチとフレーム転送", "holes": [], "warn": false}, {"term": "VLAN", "def": "物理構成に依存せず、L2ネットワークを論理的に分割する仕組み", "layer": "L1/L2 有線LAN", "sub": "VLAN", "holes": [], "warn": false}, {"term": "アクセスポート", "def": "タグなしフレームを1つのVLANに割り当てるポート（端末・サーバ接続用）", "layer": "L1/L2 有線LAN", "sub": "VLAN", "holes": [], "warn": false}, {"term": "トランクポート", "def": "VLANタグ（IEEE 802.1Q）を付けて複数VLANのフレームを運ぶポート（スイッチ間接続用）", "layer": "L1/L2 有線LAN", "sub": "VLAN", "holes": [], "warn": false}, {"term": "ネイティブVLAN", "def": "トランクでタグを付けないVLAN。両端で設定が食い違うとフレームが別VLANに漏れる", "layer": "L1/L2 有線LAN", "sub": "VLAN", "holes": [], "warn": false}, {"term": "STP", "def": "ループを防ぐためポートをブロッキング状態にして、冗長経路を1本化するプロトコル", "layer": "L1/L2 有線LAN", "sub": "STP／RSTP（ループ防止）", "holes": [], "warn": false}, {"term": "ルートブリッジ", "def": "ブリッジID（プライオリティ値＋MACアドレス）が最小のスイッチがツリーの頂点になる", "layer": "L1/L2 有線LAN", "sub": "STP／RSTP（ループ防止）", "holes": ["R3 PM2-1"], "warn": false}, {"term": "ポートの役割", "def": "ルートポート／指定ポート／非指定ポート（ブロッキング）", "layer": "L1/L2 有線LAN", "sub": "STP／RSTP（ループ防止）", "holes": ["R3 PM2-1"], "warn": false}, {"term": "RSTP", "def": "STPの収束を高速化した方式", "layer": "L1/L2 有線LAN", "sub": "STP／RSTP（ループ防止）", "holes": [], "warn": false}, {"term": "ポートファスト", "def": "端末接続ポートでSTPの待ち時間を省略し、即座に転送を始める設定", "layer": "L1/L2 有線LAN", "sub": "STP／RSTP（ループ防止）", "holes": [], "warn": false}, {"term": "リンクアグリゲーション（LAG）", "def": "複数の物理回線を束ねて1本の論理回線にする技術。帯域の増加と冗長化を同時に得る。LACPで対向機器と交渉する", "layer": "L1/L2 有線LAN", "sub": "束ねる・冗長化する技術", "holes": ["R3 PM2-1"], "warn": false}, {"term": "スイッチスタック", "def": "複数台のスイッチを仮想的に1台として管理・制御する技術。各スイッチに同じ設定が行き渡り、台数分の管理が不要になる", "layer": "L1/L2 有線LAN", "sub": "束ねる・冗長化する技術", "holes": ["R3 PM2-1", "R5 PM1-3"], "warn": false}, {"term": "チーミング", "def": "サーバの複数NICを束ねる仕組み。アクティブ/アクティブ（負荷分散）とアクティブ/スタンバイ（冗長）がある", "layer": "L1/L2 有線LAN", "sub": "束ねる・冗長化する技術", "holes": [], "warn": false}, {"term": "PoE／PoE++", "def": "LANケーブルで電力を供給する仕様。PoE++（IEEE 802.3bt）は最大90Wで、APやカメラの電源工事を不要にする", "layer": "L1/L2 有線LAN", "sub": "束ねる・冗長化する技術", "holes": ["R7 PM1-2", "R5 PM1-3"], "warn": false}, {"term": "マルチギガビットイーサネット", "def": "2.5G/5GBASE-T。既存のCat5e/6配線のまま1Gbpsを超える速度を出す⚠ 講評で「製品仕様の用語は公開情報として知っておくべき」と明記された（R5 PM1-3）", "layer": "L1/L2 有線LAN", "sub": "束ねる・冗長化する技術", "holes": ["R5 PM1-3"], "warn": true}, {"term": "周波数帯の特性", "def": "2.4GHz（遠くまで届くが干渉が多い）／5GHz（高速だが障害物に弱い）／6GHz（Wi-Fi 6E・7で使用、空いている）", "layer": "L1/L2 無線LAN", "sub": "", "holes": [], "warn": false}, {"term": "5GHz帯の区分（W52／W53／W56）", "def": "W52とW53は屋内利用（W53は気象レーダー検知時のチャネル変更＝DFSが必要）、W56は屋外でも利用できる", "layer": "L1/L2 無線LAN", "sub": "", "holes": ["R5 PM1-3"], "warn": false}, {"term": "チャネル設計", "def": "隣接するAP同士でチャネルが重ならないよう配置するのが基本。2.4GHz帯では1・6・11のように離す", "layer": "L1/L2 無線LAN", "sub": "", "holes": [], "warn": false}, {"term": "チャネルボンディング", "def": "複数のチャネルを束ねて高速化する（40/80/160MHz）。干渉のリスクと引き換え", "layer": "L1/L2 無線LAN", "sub": "", "holes": ["R5 PM1-3"], "warn": false}, {"term": "トライバンド", "def": "2.4GHz＋5GHz×2など、3つの周波数帯を同時に使えるAPの仕様⚠ 講評で正答率が特に低かった語（R5 PM1-3）", "layer": "L1/L2 無線LAN", "sub": "", "holes": ["R5 PM1-3"], "warn": true}, {"term": "CSMA/CA", "def": "送信前に媒体の空きを確認し、衝突を回避する無線のアクセス制御方式", "layer": "L1/L2 無線LAN", "sub": "", "holes": [], "warn": false}, {"term": "規格の世代", "def": "802.11n（Wi-Fi 4）／ac（Wi-Fi 5）／ax（Wi-Fi 6・6E）／be（Wi-Fi 7）。ax以降はOFDMAやMU-MIMOで多数端末の同時接続に強い", "layer": "L1/L2 無線LAN", "sub": "", "holes": [], "warn": false}, {"term": "アンテナ", "def": "APの指向性・本数がカバー範囲と同時接続性能を決める", "layer": "L1/L2 無線LAN", "sub": "", "holes": ["R5 PM1-3"], "warn": false}, {"term": "WPA3", "def": "SAEによる鍵交換でWPA2の弱点を改善した認証方式。エンタープライズでは802.1X認証と組み合わせる", "layer": "L1/L2 無線LAN", "sub": "", "holes": [], "warn": false}, {"term": "パスワード（事前共有鍵）認証", "def": "家庭・小規模向けのWPAパーソナル方式", "layer": "L1/L2 無線LAN", "sub": "", "holes": ["R5 PM1-3"], "warn": false}, {"term": "802.1X認証", "def": "サプリカント（端末）・オーセンティケータ（APやスイッチ）・認証サーバ（RADIUS）の3者構成", "layer": "L1/L2 無線LAN", "sub": "", "holes": [], "warn": false}, {"term": "ローミング", "def": "AP間を移動する際の接続切替。802.11k/v（近隣情報・誘導）と802.11r（高速な再認証）で高速化する", "layer": "L1/L2 無線LAN", "sub": "", "holes": [], "warn": false}, {"term": "セル設計", "def": "APの送信出力を調整し、セル（カバー範囲）の重なり具合と干渉を設計すること", "layer": "L1/L2 無線LAN", "sub": "", "holes": [], "warn": false}, {"term": "隠れ端末問題", "def": "互いに電波が届かない端末同士が同時に送信して衝突する問題。RTS/CTSで緩和する", "layer": "L1/L2 無線LAN", "sub": "", "holes": [], "warn": false}, {"term": "サブネットマスク", "def": "ネットワーク部とホスト部の境界。ホスト部のビット数が収容可能な台数を決める", "layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "holes": [], "warn": false}, {"term": "ネットワークアドレス／ブロードキャストアドレス", "def": "ホスト部が全0／全1のアドレス。端末には割り当てられない", "layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "holes": [], "warn": false}, {"term": "プライベートIPアドレス", "def": "10.0.0.0/8、172.16.0.0/12、192.168.0.0/16", "layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "holes": [], "warn": false}, {"term": "経路集約", "def": "複数の経路情報を、より短いプレフィックスにまとめて広告すること（例：4つの/24を1つの/22に）", "layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "holes": [], "warn": false}, {"term": "最長一致（ロンゲストマッチ）", "def": "宛先に一致する経路が複数あれば、プレフィックス長が最長のものを選ぶルール", "layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "holes": [], "warn": false}, {"term": "ARP", "def": "同一サブネット内で、IPアドレスからMACアドレスを解決する仕組み", "layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "holes": [], "warn": false}, {"term": "デフォルトゲートウェイ", "def": "別サブネット宛てのフレームの送り先（通常はルータやL3SWのインタフェースIP）", "layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "holes": ["R7 PM1-1", "R7 PM2-1"], "warn": false}, {"term": "バックボーン", "def": "ネットワークの中核部分となる基幹ネットワーク", "layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "holes": ["R7 PM1-1"], "warn": false}, {"term": "静的経路（スタティックルート）", "def": "管理者が手動で登録する経路。小規模で固定的な構成に向く", "layer": "L3 ネットワーク層", "sub": "ルーティング全般", "holes": ["R4 PM1-2"], "warn": false}, {"term": "デフォルト経路", "def": "0.0.0.0/0。どの経路にも一致しない宛先の最終的な送り先", "layer": "L3 ネットワーク層", "sub": "ルーティング全般", "holes": [], "warn": false}, {"term": "フローティングスタティック", "def": "管理距離（AD）を大きく設定した予備の静的経路。通常時は動的経路を優先させる", "layer": "L3 ネットワーク層", "sub": "ルーティング全般", "holes": [], "warn": false}, {"term": "ルーティングテーブル", "def": "宛先ネットワークとネクストホップの対応表", "layer": "L3 ネットワーク層", "sub": "ルーティング全般", "holes": ["R5 PM2-1", "R4 PM1-2"], "warn": false}, {"term": "再配布（リディストリビューション）", "def": "異なるルーティングプロトコル間で経路情報を交換させること", "layer": "L3 ネットワーク層", "sub": "ルーティング全般", "holes": ["R6 PM1-2"], "warn": false}, {"term": "ポリシーベースルーティング（PBR）", "def": "宛先だけでなく、送信元やサービスの条件によって転送先を変える方式", "layer": "L3 ネットワーク層", "sub": "ルーティング全般", "holes": ["R6 PM1-2"], "warn": false}, {"term": "OSPF", "def": "リンクステート型のIGP。エリア分割ができ、コストで経路を選択する", "layer": "L3 ネットワーク層", "sub": "OSPF", "holes": [], "warn": false}, {"term": "ダイクストラ法", "def": "OSPFが最短経路ツリーを計算するアルゴリズム", "layer": "L3 ネットワーク層", "sub": "OSPF", "holes": ["R3 PM1-2"], "warn": false}, {"term": "コスト", "def": "OSPFの経路選択の指標。帯域が大きいほど小さい値になる", "layer": "L3 ネットワーク層", "sub": "OSPF", "holes": ["R3 PM1-2", "R4 PM2-1"], "warn": false}, {"term": "LSA／LSDB", "def": "リンクステート広告と、その集まりであるリンクステートデータベース", "layer": "L3 ネットワーク層", "sub": "OSPF", "holes": ["R6 PM2-1"], "warn": false}, {"term": "Type5 LSA（外部LSA）", "def": "AS外部の経路をエリア内に広告するLSA。再配布した経路はこれで伝わる⚠ 講評で仕組みの理解不足が指摘された（R6 PM1-2）", "layer": "L3 ネットワーク層", "sub": "OSPF", "holes": ["R6 PM1-2"], "warn": true}, {"term": "最短経路", "def": "OSPFがLSDBから計算する経路", "layer": "L3 ネットワーク層", "sub": "OSPF", "holes": ["R6 PM2-1"], "warn": false}, {"term": "ABR", "def": "エリア境界ルータ。エリア間の経路集約を行うのはABRの役割", "layer": "L3 ネットワーク層", "sub": "OSPF", "holes": [], "warn": false}, {"term": "仮想リンク", "def": "バックボーンエリアに直接接続できないエリアを、他エリア経由で論理的に接続する仕組み", "layer": "L3 ネットワーク層", "sub": "OSPF", "holes": [], "warn": false}, {"term": "BGP", "def": "AS（自律システム）間の経路制御を行うEGP", "layer": "L3 ネットワーク層", "sub": "BGP", "holes": ["R5 PM2-1"], "warn": false}, {"term": "eBGP／iBGP", "def": "異なるAS間のピア／同一AS内のピア", "layer": "L3 ネットワーク層", "sub": "BGP", "holes": ["R6 PM1-2", "R3 PM2-2"], "warn": false}, {"term": "プライベートAS番号", "def": "64512〜65535。組織内だけで使うAS番号", "layer": "L3 ネットワーク層", "sub": "BGP", "holes": ["R6 PM1-2"], "warn": false}, {"term": "BGPメッセージ", "def": "OPEN（接続確立）／UPDATE（経路広告）／KEEPALIVE（生存確認）／NOTIFICATION（エラー通知）", "layer": "L3 ネットワーク層", "sub": "BGP", "holes": ["R5 PM2-1", "R3 PM2-2"], "warn": false}, {"term": "パス属性と経路選択", "def": "LOCAL_PREF（大きい方が優先）、AS_PATH長（短い方が優先）など、属性値の大小で優先経路が決まる", "layer": "L3 ネットワーク層", "sub": "BGP", "holes": [], "warn": false}, {"term": "ルートリフレクタ／クラスターID", "def": "iBGPのフルメッシュを避けるための仕組み。クラスターIDはループ防止に使う識別子", "layer": "L3 ネットワーク層", "sub": "BGP", "holes": ["R6 PM2-1"], "warn": false}, {"term": "IX（インターネットエクスチェンジ）", "def": "ISP同士が相互接続する拠点", "layer": "L3 ネットワーク層", "sub": "BGP", "holes": ["R6 PM1-1"], "warn": false}, {"term": "仮想IPアドレス／仮想MACアドレス", "def": "マスタとバックアップが共有するアドレス。端末はこれをデフォルトゲートウェイに設定する", "layer": "L3 ネットワーク層", "sub": "VRRP（ゲートウェイ冗長化）", "holes": ["R5 PM2-2"], "warn": false}, {"term": "VRID", "def": "仮想ルータの識別子。1〜255の範囲で、同一セグメント内で重複させない（数値系の穴埋めでも上限255が出題された）", "layer": "L3 ネットワーク層", "sub": "VRRP（ゲートウェイ冗長化）", "holes": ["R4 PM2-2"], "warn": false}, {"term": "マスタ／バックアップとプライオリティ値", "def": "プライオリティ値が大きい方がマスタになる。障害時にバックアップが昇格する", "layer": "L3 ネットワーク層", "sub": "VRRP（ゲートウェイ冗長化）", "holes": ["R3 PM2-1"], "warn": false}, {"term": "プリエンプト", "def": "復旧した旧マスタが自動でマスタに戻る動作。切替回数を減らすために無効化する選択もある", "layer": "L3 ネットワーク層", "sub": "VRRP（ゲートウェイ冗長化）", "holes": [], "warn": false}, {"term": "オブジェクトトラッキング", "def": "上位回線の障害を検知してプライオリティ値を下げ、切替を促す仕組み", "layer": "L3 ネットワーク層", "sub": "VRRP（ゲートウェイ冗長化）", "holes": [], "warn": false}, {"term": "静的NAT", "def": "プライベートIPとグローバルIPを1対1で固定変換する。公開サーバ用", "layer": "L3 ネットワーク層", "sub": "NAT／NAPT", "holes": [], "warn": false}, {"term": "NAPT（IPマスカレード）", "def": "IPアドレス＋ポート番号で多対1に変換する。社内からインターネットへの同時接続を可能にする", "layer": "L3 ネットワーク層", "sub": "NAT／NAPT", "holes": ["R7 PM2-1", "R4 PM2-2"], "warn": false}, {"term": "ポートフォワード機能", "def": "特定ポート宛ての通信を内部の特定サーバへ転送する機能", "layer": "L3 ネットワーク層", "sub": "NAT／NAPT", "holes": ["R4 PM2-2"], "warn": false}, {"term": "変換テーブル", "def": "変換前後のIPアドレス・ポートの対応を保持する表。セッションが終わると消える", "layer": "L3 ネットワーク層", "sub": "NAT／NAPT", "holes": [], "warn": false}, {"term": "DORA", "def": "Discover→Offer→Request→Ackの4手順でアドレスを配布する流れ", "layer": "L3 ネットワーク層", "sub": "DHCP", "holes": [], "warn": false}, {"term": "スコープ", "def": "サブネットごとに用意する、配布アドレスの範囲と配布情報（デフォルトゲートウェイ、DNSサーバ等）", "layer": "L3 ネットワーク層", "sub": "DHCP", "holes": [], "warn": false}, {"term": "DHCPリレーエージェント", "def": "別サブネットにあるDHCPサーバへ要求を中継する機能。giaddr欄に、中継したインタフェースのIPアドレスを入れる", "layer": "L3 ネットワーク層", "sub": "DHCP", "holes": ["R5 PM1-3"], "warn": false}, {"term": "giaddr", "def": "DHCPサーバが「どのサブネットからの要求か」を識別し、対応するスコープを選ぶための欄", "layer": "L3 ネットワーク層", "sub": "DHCP", "holes": [], "warn": false}, {"term": "echo要求／echo応答（リプライ）", "def": "pingの往復。到達性と往復時間を確認する", "layer": "L3 ネットワーク層", "sub": "ICMPと疎通確認", "holes": ["R7 PM2-1", "R4 PM2-2"], "warn": false}, {"term": "到達不能（Destination Unreachable）", "def": "宛先に届かない理由を返すICMPメッセージ", "layer": "L3 ネットワーク層", "sub": "ICMPと疎通確認", "holes": [], "warn": false}, {"term": "traceroute", "def": "TTLを1ずつ増やしながら送信し、ICMP時間超過メッセージで経路上のルータを列挙する", "layer": "L3 ネットワーク層", "sub": "ICMPと疎通確認", "holes": [], "warn": false}, {"term": "宛先IPアドレス", "def": "ping等の疎通確認で指定する対象", "layer": "L3 ネットワーク層", "sub": "ICMPと疎通確認", "holes": ["R7 PM2-1"], "warn": false}, {"term": "ブロードキャスト", "def": "同一セグメントの全端末宛ての通信", "layer": "L3 ネットワーク層", "sub": "ICMPと疎通確認", "holes": ["R7 PM2-1"], "warn": false}, {"term": "MTU", "def": "1つのフレームで送れる最大データ長。イーサネットの標準は1500バイト", "layer": "L3 ネットワーク層", "sub": "MTUとフラグメンテーション", "holes": [], "warn": false}, {"term": "フラグメンテーション", "def": "MTUを超えるパケットを分割する処理。受信側で再構成する", "layer": "L3 ネットワーク層", "sub": "MTUとフラグメンテーション", "holes": [], "warn": false}, {"term": "PMTUディスカバリ", "def": "DFビットを立て、ICMP到達不能（要分割）の応答から経路上の最小MTUを推定する仕組み", "layer": "L3 ネットワーク層", "sub": "MTUとフラグメンテーション", "holes": [], "warn": false}, {"term": "アドレス種別", "def": "グローバルユニキャスト／リンクローカル（fe80::/10）／ユニークローカル（fc00::/7）", "layer": "L3 ネットワーク層", "sub": "IPv6", "holes": [], "warn": false}, {"term": "NDP（近隣探索）", "def": "IPv4のARPに相当する仕組み。NS/NAでアドレス解決をし、RS/RAでルータとプレフィックスを知る", "layer": "L3 ネットワーク層", "sub": "IPv6", "holes": [], "warn": false}, {"term": "SLAAC", "def": "RAからプレフィックスを得て、端末自身がアドレスを生成する自動設定", "layer": "L3 ネットワーク層", "sub": "IPv6", "holes": [], "warn": false}, {"term": "IPv6プライバシー拡張", "def": "インタフェース識別子をランダム化し、MACアドレスから端末を追跡できないようにする仕組み⚠ 正答率が低かった（講評：R7 PM2-1）", "layer": "L3 ネットワーク層", "sub": "IPv6", "holes": [], "warn": true}, {"term": "DHCPv6", "def": "アドレス自体を配布する方式（ステートフル）と、その他の情報だけを配る方式（ステートレス）がある", "layer": "L3 ネットワーク層", "sub": "IPv6", "holes": [], "warn": false}, {"term": "デュアルスタック", "def": "IPv4とIPv6を併用する移行方式。DNSではAAAAとAの両方を引く", "layer": "L3 ネットワーク層", "sub": "IPv6", "holes": [], "warn": false}, {"term": "移行技術（DS-Lite／MAP-E）", "def": "IPv6網の上でIPv4接続を提供するトンネリング系の技術", "layer": "L3 ネットワーク層", "sub": "IPv6", "holes": [], "warn": false}, {"term": "マルチキャスト／ディストリビューションツリー", "def": "1対多の配信と、その配信経路の木構造⚠ 「ツリー」は講評で重要用語として名指しされ、正答率が低かった（R5 PM1-2）", "layer": "L3 ネットワーク層", "sub": "マルチキャスト", "holes": ["R5 PM1-2"], "warn": true}, {"term": "IGMP", "def": "受信端末がグループへの参加をルータに伝えるプロトコル", "layer": "L3 ネットワーク層", "sub": "マルチキャスト", "holes": ["R5 PM1-2"], "warn": false}, {"term": "IGMPv3", "def": "送信元を指定できる版（SSM対応）⚠ v2とv3の違いが講評で指摘された（R5 PM1-2）", "layer": "L3 ネットワーク層", "sub": "マルチキャスト", "holes": ["R5 PM1-2"], "warn": true}, {"term": "PIM-SM", "def": "ランデブーポイント（RP）を中心に配信ツリーを作る方式", "layer": "L3 ネットワーク層", "sub": "マルチキャスト", "holes": ["R5 PM1-2"], "warn": false}, {"term": "SSM", "def": "送信元を指定して配信を受ける方式。RPが不要で経路が単純になる", "layer": "L3 ネットワーク層", "sub": "マルチキャスト", "holes": ["R5 PM1-2"], "warn": false}, {"term": "Unknown Unicast", "def": "宛先不明のユニキャスト。VXLAN環境ではフラッディングの対象になる", "layer": "L3 ネットワーク層", "sub": "マルチキャスト", "holes": ["R6 PM2-1"], "warn": false}, {"term": "TCP", "def": "コネクション型で信頼性の高い通信", "layer": "L4 トランスポート層", "sub": "", "holes": ["R7 PM2-1"], "warn": false}, {"term": "3ウェイハンドシェイク", "def": "SYN→SYN/ACK→ACKでコネクションを確立する", "layer": "L4 トランスポート層", "sub": "", "holes": ["R4 PM2-2"], "warn": false}, {"term": "シーケンス番号／確認応答（ACK）", "def": "順序の保証と到達確認の仕組み。再送制御の基礎になる", "layer": "L4 トランスポート層", "sub": "", "holes": [], "warn": false}, {"term": "ウィンドウ制御（フロー制御）", "def": "受信側のバッファ容量に合わせて送信量を調整する", "layer": "L4 トランスポート層", "sub": "", "holes": [], "warn": false}, {"term": "輻輳制御", "def": "ネットワークの混雑を検知して送信レートを落とす仕組み（スロースタート等）", "layer": "L4 トランスポート層", "sub": "", "holes": [], "warn": false}, {"term": "コネクション終了", "def": "FINによる正常終了と、RSTによる強制切断がある", "layer": "L4 トランスポート層", "sub": "", "holes": [], "warn": false}, {"term": "UDP", "def": "コネクションレスで軽量。再送や順序の保証はアプリケーション側の役割。DNS、DHCP、VoIP、QUICの土台", "layer": "L4 トランスポート層", "sub": "", "holes": ["R6 PM2-1", "R6 PM2-2", "R3 PM1-3"], "warn": false}, {"term": "ポート番号", "def": "送信元と宛先のアプリケーションを識別する番号。ウェルノウンポート（0〜1023）と動的ポートに分かれる", "layer": "L4 トランスポート層", "sub": "", "holes": [], "warn": false}, {"term": "MSS", "def": "TCPで一度に送れるデータの最大長。MTUからIP/TCPヘッダを差し引いた値で、ハンドシェイク時に相手へ通知する", "layer": "L4 トランスポート層", "sub": "", "holes": [], "warn": false}, {"term": "再帰問合せ／反復問合せ", "def": "端末からキャッシュDNSサーバへは再帰、キャッシュDNSサーバから権威DNSサーバへは反復", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": [], "warn": false}, {"term": "フォワーダ", "def": "自組織のDNSサーバが、外部への問合せを指定した上位のDNSサーバへ転送する設定・役割", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": ["R3 PM2-1"], "warn": false}, {"term": "権威DNSサーバ", "def": "ゾーン情報を持つサーバ", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": ["R5 PM1-1"], "warn": false}, {"term": "キャッシュDNSサーバ", "def": "問合せ結果を保持し、端末の代理で名前解決するサーバ", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": ["R5 PM1-1"], "warn": false}, {"term": "内部DNSサーバ／外部DNSサーバ／社内DNSサーバ", "def": "組織内向けと公開向けで役割を分けたDNSサーバ", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": ["R3 PM2-1", "R4 PM1-3"], "warn": false}, {"term": "レコード種別", "def": "A（IPv4アドレス）／AAAA（IPv6アドレス）／CNAME（別名）／MX（メール配送先）／NS（権威サーバ）／SOA／TXT／SRV（サービス発見）", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": ["R5 PM2-2", "R4 PM2-2"], "warn": false}, {"term": "TTL", "def": "キャッシュの保持時間。切替の前には短くしておくと反映が速い", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": [], "warn": false}, {"term": "DNSSEC", "def": "応答に署名を付けて、改ざんやなりすましを防ぐ仕組み", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": [], "warn": false}, {"term": "DoH／DoT", "def": "DNSの問合せをHTTPSやTLSで暗号化する方式。社内の名前解決ポリシーと衝突することがある", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": [], "warn": false}, {"term": "スプリットDNS", "def": "内部向けと外部向けで、同じ名前に対して返す情報を分ける構成", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": [], "warn": false}, {"term": "DNSラウンドロビン", "def": "1つの名前に複数のAレコードを登録し、順番に返して負荷を分散する方式", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": ["R5 PM2-1"], "warn": false}, {"term": "逆引き", "def": "IPアドレスからホスト名を引くこと", "layer": "L7 アプリケーション層", "sub": "DNS", "holes": ["R6 PM2-2"], "warn": false}, {"term": "HTTP", "def": "メソッド（GET、POST、CONNECT等）とステータスコードでやり取りする、ステートレスなプロトコル", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R4 PM1-1", "R3 PM1-1"], "warn": false}, {"term": "リクエスト／レスポンス", "def": "クライアントの要求とサーバの応答の組", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R7 PM1-2"], "warn": false}, {"term": "ホストヘッダフィールド", "def": "HTTPリクエストで接続先のホスト名を示す欄。リバースプロキシや仮想ホスティングの振分キーになる", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R4 PM2-2"], "warn": false}, {"term": "HTTP/2", "def": "1つのコネクションで複数のリクエストを多重化する。HPACKによるヘッダ圧縮と二進フレーミングが特徴", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": [], "warn": false}, {"term": "ストリーム", "def": "HTTP/2で多重化される個々のリクエスト/レスポンスの流れ", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R5 PM1-1", "R7 PM1-2"], "warn": false}, {"term": "ストリームID", "def": "各ストリームを識別する番号⚠ 講評で「HTTP/2の基本的な用語なので覚えておいてほしい」と名指しされた（R7 PM1-2）", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R7 PM1-2"], "warn": true}, {"term": "並列", "def": "複数のストリームを同時に流せる性質", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R7 PM1-2"], "warn": false}, {"term": "疑似ヘッダー（:method等）", "def": "HTTP/2でメソッドやパスを表すための特殊なヘッダ", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R5 PM1-1"], "warn": false}, {"term": "HTTP/3", "def": "QUIC（UDP）の上で動くHTTP。TCPのヘッドオブライン・ブロッキングを避けられる", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": [], "warn": false}, {"term": "QUIC", "def": "UDP上で動くトランスポートプロトコル。接続IDによって回線切替に強く、0-RTTでの再開や輻輳制御を内蔵する", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": [], "warn": false}, {"term": "TLS", "def": "暗号化とサーバ認証を行うプロトコル。ハンドシェイクで証明書の提示、鍵交換を経て暗号化通信に入る", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R5 PM1-1"], "warn": false}, {"term": "ALPN", "def": "TLSの開始時に、使用する上位プロトコル（HTTP/2等）を決めるための拡張", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": [], "warn": false}, {"term": "SNI", "def": "TLSの開始時に接続先ホスト名を伝える拡張。1台のサーバで複数サイトを振り分けるために必要", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": [], "warn": false}, {"term": "サーバ証明書／PKI", "def": "CA（認証局）が発行する証明書で公開鍵の正当性を保証する公開鍵基盤", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": [], "warn": false}, {"term": "Subject", "def": "証明書に記載される主体者（所有者）の名称", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R4 PM2-1"], "warn": false}, {"term": "シリアル番号", "def": "証明書を一意に識別する番号。失効管理に使う", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R4 PM2-1"], "warn": false}, {"term": "公開鍵／秘密鍵", "def": "公開鍵は検証や暗号化に、秘密鍵は署名に使う", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R4 PM2-1", "R6 PM2-2"], "warn": false}, {"term": "相互TLS（mTLS）", "def": "クライアント証明書でも認証する方式。機器認証やAPI連携で使う", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": [], "warn": false}, {"term": "DHE", "def": "一時鍵を使うDiffie-Hellman鍵交換。フォワードシークレシー（過去の通信を後から復号できない性質）の根拠になる", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": ["R4 PM2-1"], "warn": false}, {"term": "Cookie／セッション", "def": "ステートレスなHTTPでログイン状態などを保持する仕組み", "layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "holes": [], "warn": false}, {"term": "フォワードプロキシ", "def": "社内端末の代理として外部へ接続する（利用者側の出口）", "layer": "L7 アプリケーション層", "sub": "プロキシ／ゲートウェイ", "holes": [], "warn": false}, {"term": "リバースプロキシ", "def": "公開サーバの前段で代理応答する（サーバ側の入口）。負荷分散やWAFと兼ねることが多い", "layer": "L7 アプリケーション層", "sub": "プロキシ／ゲートウェイ", "holes": ["R5 PM1-1"], "warn": false}, {"term": "プロキシサーバ", "def": "上記の総称。FWのルール要素として頻繁に登場する", "layer": "L7 アプリケーション層", "sub": "プロキシ／ゲートウェイ", "holes": ["R4 PM1-3"], "warn": false}, {"term": "PACファイル／プロキシ自動設定機能", "def": "URLごとにプロキシを使うかどうかを自動判定する仕組み", "layer": "L7 アプリケーション層", "sub": "プロキシ／ゲートウェイ", "holes": ["R5 PM2-1"], "warn": false}, {"term": "WPAD", "def": "PACファイルの場所を自動配布する仕組み。検出にはDHCP、DNS、HTTP（URLの取得）が絡む", "layer": "L7 アプリケーション層", "sub": "プロキシ／ゲートウェイ", "holes": ["R6 PM1-3"], "warn": false}, {"term": "SWG（セキュアWebゲートウェイ）", "def": "クラウド型のWebプロキシサービス。URLフィルタやマルウェア検査をSaaSで提供する", "layer": "L7 アプリケーション層", "sub": "プロキシ／ゲートウェイ", "holes": [], "warn": false}, {"term": "ローカルブレイクアウト", "def": "特定のクラウド宛て通信だけを、拠点から直接インターネットへ出す構成", "layer": "L7 アプリケーション層", "sub": "プロキシ／ゲートウェイ", "holes": [], "warn": false}, {"term": "SMTP／MAIL FROM", "def": "メールの送信・転送プロトコルと、エンベロープ上の送信者", "layer": "L7 アプリケーション層", "sub": "メールと送信ドメイン認証", "holes": ["R6 PM2-2"], "warn": false}, {"term": "Preference", "def": "MXレコードの優先度。値が小さい配送先が優先される", "layer": "L7 アプリケーション層", "sub": "メールと送信ドメイン認証", "holes": ["R6 PM2-2"], "warn": false}, {"term": "SPF", "def": "送信元IPアドレスが正当かどうかを、DNSのTXTレコードで検証する仕組み", "layer": "L7 アプリケーション層", "sub": "メールと送信ドメイン認証", "holes": [], "warn": false}, {"term": "DKIM", "def": "メールに電子署名を付け、改ざんの有無と送信者の正当性を検証する仕組み。署名にはRSA等のアルゴリズムを使う", "layer": "L7 アプリケーション層", "sub": "メールと送信ドメイン認証", "holes": ["R6 PM2-2"], "warn": false}, {"term": "DMARC", "def": "SPFやDKIMの検証結果がドメインと一致するかを確認し、失敗時の扱い（拒否等）を宣言する仕組み", "layer": "L7 アプリケーション層", "sub": "メールと送信ドメイン認証", "holes": [], "warn": false}, {"term": "ダイジェスト", "def": "ハッシュ値による改ざん検知の基礎", "layer": "L7 アプリケーション層", "sub": "メールと送信ドメイン認証", "holes": ["R4 PM1-1"], "warn": false}, {"term": "認証サーバ", "def": "利用者や端末の認証を担うサーバ", "layer": "L7 アプリケーション層", "sub": "認証・認可", "holes": ["R7 PM1-3"], "warn": false}, {"term": "SAML 2.0", "def": "IdP（認証側）とSP（サービス側）の間で認証結果を連携し、SSOを実現する仕組み", "layer": "L7 アプリケーション層", "sub": "認証・認可", "holes": [], "warn": false}, {"term": "OAuth 2.0／OpenID Connect", "def": "認可の枠組みと、その上に構築された認証の仕組み", "layer": "L7 アプリケーション層", "sub": "認証・認可", "holes": [], "warn": false}, {"term": "Kerberos", "def": "KDC（AS/TGS）がチケットを発行し、その提示で各サービスへSSOする方式", "layer": "L7 アプリケーション層", "sub": "認証・認可", "holes": [], "warn": false}, {"term": "RADIUS", "def": "ネットワーク機器と認証サーバの間で認証情報をやり取りするプロトコル。802.1Xの背後で動く", "layer": "L7 アプリケーション層", "sub": "認証・認可", "holes": [], "warn": false}, {"term": "LDAP／Active Directory", "def": "ディレクトリサービス。組織やユーザの情報を一元管理し、認証にも使う", "layer": "L7 アプリケーション層", "sub": "認証・認可", "holes": [], "warn": false}, {"term": "改ざん検知", "def": "ハッシュや署名でデータの改ざんを検出する仕組み", "layer": "L7 アプリケーション層", "sub": "認証・認可", "holes": ["R4 PM2-1"], "warn": false}, {"term": "多要素認証", "def": "知識・所持・生体の要素を組み合わせる認証（例：証明書＋パスワード）", "layer": "L7 アプリケーション層", "sub": "認証・認可", "holes": [], "warn": false}, {"term": "SNMP", "def": "マネージャとエージェント（MIB）で機器の状態を収集・監視するプロトコル。機器からの通知はトラップ", "layer": "L7 アプリケーション層", "sub": "運用系プロトコル", "holes": ["R3 PM1-1"], "warn": false}, {"term": "Syslog", "def": "機器やサーバのログを送受信・集約する仕組み", "layer": "L7 アプリケーション層", "sub": "運用系プロトコル", "holes": ["R4 PM1-1", "R7 PM1-3"], "warn": false}, {"term": "NTP", "def": "時刻同期のプロトコル。ログの突合せや証明書の有効期間判定の前提になる", "layer": "L7 アプリケーション層", "sub": "運用系プロトコル", "holes": [], "warn": false}, {"term": "NetFlow／sFlow", "def": "フローの統計情報を集め、トラフィック分析に使う仕組み", "layer": "L7 アプリケーション層", "sub": "運用系プロトコル", "holes": [], "warn": false}, {"term": "RESTful", "def": "HTTPのメソッドとURLでリソースを操作するAPI設計の考え方", "layer": "L7 アプリケーション層", "sub": "運用系プロトコル", "holes": ["R7 PM2-2"], "warn": false}, {"term": "IPsec", "def": "IKEで鍵交換とSA（セキュリティアソシエーション）を確立し、ESPで暗号化する仕組み。トンネルモードとトランスポートモードがある", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": [], "warn": false}, {"term": "IKE SA／Child SA", "def": "IKE SAは管理用の接続、Child SAは実際のデータ通信用のSA", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": ["R4 PM1-2"], "warn": false}, {"term": "暗号／鍵長", "def": "暗号アルゴリズムと鍵の長さが、IPsecのポリシー設定の要素になる", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": ["R4 PM1-2"], "warn": false}, {"term": "IKEv2", "def": "IPsecの鍵交換の現行標準。MOBIKEにより回線切替にも対応する", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": [], "warn": false}, {"term": "事前共有鍵／共有鍵", "def": "IPsec等で事前に双方で共有しておく鍵⚠ 講評で「基本用語」として名指しされた（R6 PM1-3）", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": ["R6 PM1-3", "R3 PM1-2"], "warn": true}, {"term": "SSL-VPN", "def": "TLSを使ったリモートアクセス。代理転送型（L2フォワーディング等）とトンネル型がある", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": ["R4 PM2-1"], "warn": false}, {"term": "VRF", "def": "1台のルータの中に、複数の独立したルーティングテーブルを持つ仮想化技術", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": ["R4 PM1-2"], "warn": false}, {"term": "ハブアンドスポーク", "def": "中心拠点（ハブ）を経由して拠点間を接続するトポロジ", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": ["R6 PM1-3"], "warn": false}, {"term": "閉域接続", "def": "専用線、広域イーサネット、IP-VPNなど、インターネットを通らない接続サービス", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": [], "warn": false}, {"term": "ZTNA", "def": "ネットワークの境界ではなく、ユーザとデバイスの認証・認可の都度にアクセスを許可する考え方", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": [], "warn": false}, {"term": "SASE／SSE", "def": "ネットワーク機能とセキュリティ機能をクラウドで統合提供する枠組み（SWGやZTNAを含む）", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": [], "warn": false}, {"term": "C&Cサーバ", "def": "マルウェアに感染した端末へ指令を送るサーバ。SWGやプロキシのログ分析で検知の対象になる", "layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "holes": ["R7 PM1-3"], "warn": false}, {"term": "ロードバランサ（LB）", "def": "複数サーバへ通信を振り分ける装置", "layer": "横断テーマ", "sub": "負荷分散・配信", "holes": ["R6 PM1-1", "R5 PM2-2"], "warn": false}, {"term": "振分アルゴリズム", "def": "ラウンドロビン、最小接続数（最少接続数）など", "layer": "横断テーマ", "sub": "負荷分散・配信", "holes": ["R6 PM1-1"], "warn": false}, {"term": "ヘルスチェック", "def": "ICMPのエコー応答、TCPのSYN/ACK、HTTPのGET応答などでサーバの死活を判定する", "layer": "横断テーマ", "sub": "負荷分散・配信", "holes": ["R4 PM2-2"], "warn": false}, {"term": "パーシステンス", "def": "同一クライアントを同一サーバに固定する振分（Cookieや送信元IPで識別）", "layer": "横断テーマ", "sub": "負荷分散・配信", "holes": [], "warn": false}, {"term": "DSR", "def": "戻りの通信をLB経由にしない方式。LBの負荷を下げられるが、同一L2セグメント等の制約がある", "layer": "横断テーマ", "sub": "負荷分散・配信", "holes": [], "warn": false}, {"term": "GSLB", "def": "DNS応答の制御によって、拠点やサイトの間で振り分ける広域負荷分散", "layer": "横断テーマ", "sub": "負荷分散・配信", "holes": [], "warn": false}, {"term": "CDN", "def": "コンテンツをエッジサーバにキャッシュして配信する仕組み。オリジンサーバへの負荷と遅延を減らす", "layer": "横断テーマ", "sub": "負荷分散・配信", "holes": [], "warn": false}, {"term": "スケールアップ／スケールアウト", "def": "1台の性能を上げる／台数を増やす、処理能力の増強方法", "layer": "横断テーマ", "sub": "負荷分散・配信", "holes": ["R5 PM2-2"], "warn": false}, {"term": "帯域確保", "def": "特定の通信のために帯域を予約・保証すること", "layer": "横断テーマ", "sub": "QoS（品質制御）", "holes": ["R7 PM1-2"], "warn": false}, {"term": "優先制御", "def": "キューイングによって、音声など遅延に弱い通信を先に通す制御", "layer": "横断テーマ", "sub": "QoS（品質制御）", "holes": [], "warn": false}, {"term": "帯域制御", "def": "シェーピング（遅らせて流量を均す）とポリシング（超過分を破棄またはマーキングする）", "layer": "横断テーマ", "sub": "QoS（品質制御）", "holes": [], "warn": false}, {"term": "廃棄（ドロップ／損失）", "def": "輻輳時にパケットを捨てること。音声品質の劣化要因になる", "layer": "横断テーマ", "sub": "QoS（品質制御）", "holes": ["R3 PM1-3"], "warn": false}, {"term": "ToS／DSCP", "def": "IPヘッダ内のマーキングで優先度を示す。ToSバイトのうち優先度に使う部分がDSCP", "layer": "横断テーマ", "sub": "QoS（品質制御）", "holes": ["R3 PM1-3"], "warn": false}, {"term": "CS-ACELP", "def": "VoIPで使われる音声符号化方式（8kビット/秒）⚠ 正答率が低かった（講評：R3 PM1-3）", "layer": "横断テーマ", "sub": "QoS（品質制御）", "holes": [], "warn": true}, {"term": "ハイパーバイザ", "def": "仮想マシンを動作させる基盤ソフトウェア", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": ["R4 PM2-2"], "warn": false}, {"term": "仮想スイッチ", "def": "仮想化基盤の中で、VM間のL2スイッチングを担う機能", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": [], "warn": false}, {"term": "VXLAN", "def": "L2フレームをUDPでカプセル化し、L3ネットワークの上にL2を重ねるオーバーレイ技術。識別子はVNI", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": [], "warn": false}, {"term": "カプセル化の構成", "def": "元のイーサネットフレーム＋VXLANヘッダー＋外側のUDP/IPv4ヘッダー", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": ["R6 PM2-1"], "warn": false}, {"term": "VNI", "def": "VXLANのネットワーク識別子で、24ビット（数値の穴埋めで出題：R6 PM2-1）", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": [], "warn": false}, {"term": "VTEP", "def": "VXLANトンネルの出入口となる機器・機能", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": [], "warn": false}, {"term": "EVPN", "def": "VXLANの制御プレーンにBGPを使い、MAC/IP情報を配布する方式", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": [], "warn": false}, {"term": "ESI", "def": "マルチホーム接続されるセグメントの識別子", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": ["R6 PM2-1"], "warn": false}, {"term": "SDN／コントローラ", "def": "制御部と転送部を分離し、集中制御する考え方。運用自動化の管理コントローラもこの系譜", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": ["R3 PM1-1"], "warn": false}, {"term": "SD-WAN", "def": "回線の種別を問わず、アプリケーション単位で経路を制御するWANの仮想化技術", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": [], "warn": false}, {"term": "カスタマーエッジ", "def": "利用者側に置かれるSD-WANの端末装置", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": ["R6 PM1-2"], "warn": false}, {"term": "DMZ", "def": "公開サーバを置く、内部とも外部とも分離された中間セグメント", "layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "holes": ["R6 PM1-2"], "warn": false}, {"term": "LPWA", "def": "低消費電力で長距離をカバーする無線通信の総称（LoRa、Sigfox、NB-IoT等）", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": [], "warn": false}, {"term": "消費（電力）", "def": "電池駆動のIoT機器では、通信方式の選定を消費電力が左右する", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": ["R7 PM2-2"], "warn": false}, {"term": "セルラー／非セルラー", "def": "携帯電話網を使う方式と、免許不要帯で自営する方式の対比", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": ["R7 PM2-2"], "warn": false}, {"term": "ISMバンド", "def": "免許不要で使える周波数帯。2.4GHz帯や920MHz帯が含まれる⚠ 講評でピンポイントに正答率が低かった（R7 PM2-2）", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": ["R7 PM2-2"], "warn": true}, {"term": "3GPP", "def": "LTEや5Gなどの移動通信の仕様を策定する団体⚠ 同上（R7 PM2-2）", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": ["R7 PM2-2"], "warn": true}, {"term": "干渉", "def": "同一周波数帯を使う他の通信との電波のぶつかり合い", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": ["R7 PM2-2"], "warn": false}, {"term": "SIM", "def": "セルラー通信で加入者識別と認証に使うカード／モジュール", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": ["R7 PM2-2"], "warn": false}, {"term": "CoAP", "def": "IoT向けの軽量なアプリケーションプロトコル。UDP上で動き、RESTfulな操作（GET/POST等）を提供する", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": [], "warn": false}, {"term": "バックオフ", "def": "再送間隔を指数的に延ばす制御。輻輳や衝突の回避に使う", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": ["R7 PM2-2"], "warn": false}, {"term": "順不同／重複／同期", "def": "UDPベースの通信で対処が必要になる事象", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": ["R7 PM2-2"], "warn": false}, {"term": "リフレクション攻撃", "def": "送信元を偽装した要求で、応答を被害者へ集中させる増幅型の攻撃", "layer": "横断テーマ", "sub": "IoT・LPWA", "holes": ["R7 PM2-2"], "warn": false}, {"term": "ファイアウォール", "def": "L3/L4のポリシーで通信を許可・拒否する装置。ステートフル検査が基本。ルールの要素として送信元・宛先（機器名やany）・サービス（UDP/53等）が並ぶ", "layer": "横断テーマ", "sub": "セキュリティ対策", "holes": ["R4 PM1-3"], "warn": false}, {"term": "WAF", "def": "HTTPの中身を検査し、Webアプリケーションへの攻撃を防ぐ仕組み", "layer": "横断テーマ", "sub": "セキュリティ対策", "holes": [], "warn": false}, {"term": "IDS／IPS", "def": "不正な通信の検知／検知に加えて遮断まで行う仕組み", "layer": "横断テーマ", "sub": "セキュリティ対策", "holes": [], "warn": false}, {"term": "DDoS対策", "def": "大量トラフィックによるサービス妨害への対策（上流での吸収、CDNの活用など）", "layer": "横断テーマ", "sub": "セキュリティ対策", "holes": [], "warn": false}, {"term": "公開Webサーバ", "def": "DMZに置かれる公開系サーバの代表", "layer": "横断テーマ", "sub": "セキュリティ対策", "holes": ["R4 PM1-3"], "warn": false}, {"term": "ログと証跡", "def": "NAT変換ログやFWログの保存は、「誰の通信だったか」を後から追うために必須", "layer": "横断テーマ", "sub": "セキュリティ対策", "holes": [], "warn": false}], "notes": [{"layer": "L1/L2 有線LAN", "sub": "STP／RSTP（ループ防止）", "text": "⚠ RSTPでトポロジ再構成が速い理由は2点セット：「代替ポート等の役割を事前に決めているから」「ポートの状態遷移を待たずに転送状態に移れるから」。どちらか片方だけでは不十分（講評：R3 PM2-1）"}, {"layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "text": "⚠ 172.16.0.0/12の範囲は **172.16.0.0〜172.31.255.255** で、両端のアドレスも利用できる。境界を落とす誤答が多かった（講評：R6 PM1-3）"}, {"layer": "L3 ネットワーク層", "sub": "IPアドレスとサブネット", "text": "⚠ 機器自身のサブネットマスクと、経路表のプレフィックス長は別物。サーバが/24のサブネットに属していても、経路表側は/25のような細かい単位で経路を登録できる（R3 PM2-1の得点差がついた点）"}, {"layer": "L3 ネットワーク層", "sub": "OSPF", "text": "⚠ コストを極端に大きな値（例：65535）に変更すると、その経路を避けるよう迂回させられる。メンテナンス時の経路切替テクニックとして出題され、正答率が低かった（講評：R7 PM1-1）"}, {"layer": "L3 ネットワーク層", "sub": "OSPF", "text": "⚠ R3 PM1-2は問題全体の正答率が低かった。OSPFのデフォルト経路の扱い、仮想リンク、経路集約を行うABRの見分け方が弱点（講評：R3 PM1-2）"}, {"layer": "L3 ネットワーク層", "sub": "BGP", "text": "⚠ 「大きい／小さい」の比較語そのものが穴埋めで繰り返し出題されている（R6 PM1-1、R5 PM2-1、R3 PM2-2）。属性ごとの向きを暗記しておくこと。講評でも基本理解不足が指摘された（R6 PM1-1）"}, {"layer": "L3 ネットワーク層", "sub": "VRRP（ゲートウェイ冗長化）", "text": "⚠ VRRPの障害検知は、相手からのアドバタイズメント（広告）の途絶で判断する。能動的に死活を問い合わせるのではない（講評：R4 PM2-2）"}, {"layer": "L3 ネットワーク層", "sub": "ICMPと疎通確認", "text": "⚠ この動作原理そのものが穴埋め・記述で問われ、正答率が低かった（講評：R3 PM1-1）"}, {"layer": "L3 ネットワーク層", "sub": "MTUとフラグメンテーション", "text": "⚠ トンネル（IPsec等）を挟むと、追加ヘッダの分だけ実効MTUが小さくなる。分割や通信不可の原因として頻出"}, {"layer": "L3 ネットワーク層", "sub": "IPv6", "text": "⚠ IPv6側に障害があってもIPv4へフォールバックして通信できてしまうため、障害に気付きにくい（講評：R7 PM2-1）"}, {"layer": "L7 アプリケーション層", "sub": "DNS", "text": "⚠ DNSの応答がUDPの上限サイズ（512バイト）を超える場合はTCPで問い合わせ直す（数値の穴埋めで出題：R6 PM2-2）"}, {"layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "text": "⚠ 1台のサーバで複数サイトを振り分ける識別に使う点が講評でも取り上げられた（R4 PM2-2）"}, {"layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "text": "⚠ ALPNは暗号化プロトコルではない。これを暗号化技術と誤解した誤答が多かった（講評：R5 PM1-1）"}, {"layer": "L7 アプリケーション層", "sub": "Web（HTTP／HTTPS）", "text": "⚠ クライアント証明書認証では、秘密鍵は利用者（端末）側が保有し、署名に使う。サーバ側は公開鍵で検証する。この保有関係を取り違えると解けない（講評：R4 PM2-1）"}, {"layer": "L7 アプリケーション層", "sub": "プロキシ／ゲートウェイ", "text": "⚠ この機能自体を知らないと解けない設問があり、講評で名指しされた（R5 PM2-1）"}, {"layer": "L7 アプリケーション層", "sub": "認証・認可", "text": "⚠ Kerberosは共通鍵暗号方式であること、暗号化されたチケットからは鍵を取り出せないことが前提知識（講評：R4 PM1-3）"}, {"layer": "L7 アプリケーション層", "sub": "運用系プロトコル", "text": "⚠ 講評で、プロトコル名の穴埋め自体の正答率が低かったと指摘された。「名前だけでなく内容まで」理解しておくこと（R4 PM1-1）"}, {"layer": "横断テーマ", "sub": "VPN・暗号・ゼロトラスト", "text": "⚠ ESPで暗号化されるのはペイロード側であり、**ESPヘッダー自体は暗号化範囲に含まれない**。この誤解が多かった（講評：R6 PM1-3）"}, {"layer": "横断テーマ", "sub": "仮想化・クラウド・WAN", "text": "⚠ VXLANのトランスポートは**UDP**（TCPではない）。講評で正答率の低さが指摘された（R6 PM2-1）"}, {"layer": "横断テーマ", "sub": "IoT・LPWA", "text": "⚠ CoAPは**UDP**、HTTP/1.1は**TCP**というトランスポート層の違いが前提知識になる（講評：R7 PM2-2）"}, {"layer": "使い方", "sub": "", "text": "⚠マークは、フェーズ2の解き直しで間違えた問題と照らして読むと効果が高い。"}]};
+var HINTS = {
+  "RSTP":"STPの収束を高速化した、ループ防止プロトコルの改良版",
+  "最短経路":"OSPFがLSDBをもとに計算する、コストが最小になる経路",
+  "IX（インターネットエクスチェンジ）":"複数のISP同士が相互接続し、トラフィックを交換する拠点",
+  "宛先IPアドレス":"pingなどの疎通確認で、確認対象として指定するIPアドレス",
+  "ブロードキャスト":"同一セグメント内の全端末を宛先とする通信",
+  "TCP":"コネクションを確立して行う、信頼性の高いトランスポート層の通信方式",
+  "権威DNSサーバ":"担当するゾーンの情報を保持し、そのゾーンについて正式な回答を返すDNSサーバ",
+  "逆引き":"IPアドレスを手がかりに、対応するホスト名を調べる名前解決",
+  "並列":"HTTP/2で、複数のストリームを同時に流すことができる性質",
+  "ダイジェスト":"ハッシュ値によってデータの改ざんを検知する際の基礎となるもの",
+  "認証サーバ":"利用者や端末が正当かどうかを確認する認証処理を担うサーバ",
+  "ロードバランサ（LB）":"受けた通信を複数のサーバへ振り分ける装置",
+  "公開Webサーバ":"DMZに置かれ、外部へ公開される代表的なサーバ"
+};
+var TERMS = DATA.terms.map(function(t,i){ t.id=i; return t; });
+var NOTES = DATA.notes;
+var LS_KEY = "nesupe-glossary-ls-v1";
+
+function loadStore(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    if(raw){ var s = JSON.parse(raw); if(s && s.stats && s.history) return s; }
+  }catch(e){}
+  return { stats:{}, history:[] };
+}
+var store = loadStore();
+function saveStore(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(store)); }catch(e){} }
+function statOf(id){ return store.stats[id] || {c:0,w:0}; }
+function isWeak(id){ var s = statOf(id); return s.w>0; }
+function weakIds(){ return TERMS.filter(function(t){ return isWeak(t.id); }).map(function(t){ return t.id; }); }
+
+function baseNames(term){
+  return term.split(/[／/・]/).map(function(x){ return x.replace(/（.*?）/g,"").replace(/\(.*?\)/g,"").trim(); }).filter(Boolean);
+}
+function termInDef(term, def){
+  var names = baseNames(term);
+  for(var i=0;i<names.length;i++){ if(names[i].length>=2 && def.indexOf(names[i])>=0) return true; }
+  if(def.indexOf(term)>=0) return true;
+  return false;
+}
+function shuffle(a){
+  var arr=a.slice();
+  for(var i=arr.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+  return arr;
+}
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* ---------- stats header ---------- */
+function renderStats(){
+  var tried=0, tc=0, tw=0;
+  TERMS.forEach(function(t){ var s=statOf(t.id); if(s.c+s.w>0) tried++; tc+=s.c; tw+=s.w; });
+  document.getElementById("stTried").textContent = tried;
+  document.getElementById("stAcc").textContent = (tc+tw)>0 ? Math.round(tc/(tc+tw)*100)+"%" : "―";
+  document.getElementById("stWeak").textContent = weakIds().length;
+}
+
+/* ---------- tabs ---------- */
+var tabs = document.querySelectorAll(".tab");
+tabs.forEach(function(b){
+  b.addEventListener("click", function(){
+    tabs.forEach(function(x){ x.setAttribute("aria-selected","false"); });
+    b.setAttribute("aria-selected","true");
+    ["test","gloss","notes","record"].forEach(function(v){
+      document.getElementById("view-"+v).hidden = (v!==b.dataset.view);
+    });
+    if(b.dataset.view==="gloss") renderGloss();
+    if(b.dataset.view==="record") renderRecord();
+  });
+});
+
+/* ---------- quiz setup ---------- */
+var selMode="all", selCount=10;
+var modeSeg=document.getElementById("modeSeg");
+modeSeg.querySelectorAll("button").forEach(function(b){
+  b.addEventListener("click", function(){
+    modeSeg.querySelectorAll("button").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+    b.setAttribute("aria-pressed","true");
+    selMode=b.dataset.mode;
+    document.getElementById("layerField").hidden = (selMode!=="layer");
+    updatePoolNote();
+  });
+});
+var countSeg=document.getElementById("countSeg");
+countSeg.querySelectorAll("button").forEach(function(b){
+  b.addEventListener("click", function(){
+    countSeg.querySelectorAll("button").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+    b.setAttribute("aria-pressed","true");
+    selCount=parseInt(b.dataset.count,10);
+    updatePoolNote();
+  });
+});
+var layers=[]; TERMS.forEach(function(t){ if(layers.indexOf(t.layer)<0) layers.push(t.layer); });
+var layerSel=document.getElementById("layerSel");
+layers.forEach(function(L){ var o=document.createElement("option"); o.value=L; o.textContent=L; layerSel.appendChild(o); });
+layerSel.addEventListener("change", updatePoolNote);
+
+function poolFor(){
+  if(selMode==="holes") return TERMS.filter(function(t){ return t.holes.length>0; });
+  if(selMode==="warn") return TERMS.filter(function(t){ return t.warn; });
+  if(selMode==="layer") return TERMS.filter(function(t){ return t.layer===layerSel.value; });
+  if(selMode==="weak") return TERMS.filter(function(t){ return isWeak(t.id); });
+  return TERMS.slice();
+}
+function modeLabel(){
+  if(selMode==="holes") return "穴埋め実績のある語だけ";
+  if(selMode==="warn") return "⚠付き用語";
+  if(selMode==="layer") return layerSel.value;
+  if(selMode==="weak") return "苦手だけ";
+  return "全範囲";
+}
+function updatePoolNote(){
+  var pool=poolFor();
+  var btn=document.getElementById("startBtn");
+  var note=document.getElementById("poolNote");
+  if(pool.length===0){
+    note.textContent="対象の語がまだありません。先に通常モードで解くと、間違えた語が「苦手」として溜まります。";
+    btn.disabled=true;
+  }else{
+    note.textContent="対象は "+pool.length+" 語です。"+Math.min(selCount,pool.length)+" 問を出題します。";
+    btn.disabled=false;
+  }
+}
+
+/* ---------- quiz engine ---------- */
+var quiz=null;
+function pickDistractors(ans, dir){
+  var cands = TERMS.filter(function(t){
+    if(t.id===ans.id) return false;
+    if(t.term.indexOf(ans.term)>=0 || ans.term.indexOf(t.term)>=0) return false;
+    if(termInDef(t.term, ans.def)) return false;
+    if(baseNames(t.term).some(function(n){ return n.length>=2 && ans.term.indexOf(n)>=0; })) return false;
+    if(dir==="d2t" && termInDef(ans.term, t.def)) return false;
+    return true;
+  });
+  var sameLayer = shuffle(cands.filter(function(t){ return t.layer===ans.layer; }));
+  var other = shuffle(cands.filter(function(t){ return t.layer!==ans.layer; }));
+  var picked = sameLayer.concat(other).slice(0,3);
+  if(picked.length<3){
+    var rest = shuffle(TERMS.filter(function(t){ return t.id!==ans.id && picked.indexOf(t)<0; }));
+    while(picked.length<3 && rest.length) picked.push(rest.pop());
+  }
+  return picked;
+}
+function buildQuiz(){
+  var pool=shuffle(poolFor());
+  var n=Math.min(selCount, pool.length);
+  var qs=[];
+  for(var i=0;i<n;i++){
+    var t=pool[i];
+    var leak = termInDef(t.term, t.def);
+    var dir = leak ? "t2d" : (Math.random()<0.5 ? "t2d" : "d2t");
+    var ds = pickDistractors(t, dir);
+    var opts;
+    if(dir==="t2d"){
+      opts = shuffle([{txt:t.def, ok:true}].concat(ds.map(function(d){ return {txt:d.def, ok:false}; })));
+    }else{
+      opts = shuffle([{txt:t.term, ok:true}].concat(ds.map(function(d){ return {txt:d.term, ok:false}; })));
+    }
+    qs.push({term:t, dir:dir, opts:opts, answered:false, correct:false, chosen:""});
+  }
+  return {qs:qs, idx:0, correctCount:0, wrong:[]};
+}
+var setupCard=document.getElementById("setupCard"), quizCard=document.getElementById("quizCard"), resultCard=document.getElementById("resultCard");
+document.getElementById("startBtn").addEventListener("click", function(){
+  quiz=buildQuiz();
+  setupCard.hidden=true; resultCard.hidden=true; quizCard.hidden=false;
+  renderQuestion();
+});
+function renderQuestion(){
+  var q=quiz.qs[quiz.idx], t=q.term;
+  document.getElementById("qCount").textContent=(quiz.idx+1)+" / "+quiz.qs.length+" 問";
+  document.getElementById("qCat").textContent=t.layer+(t.sub ? " ＞ "+t.sub : "");
+  var hole=document.getElementById("qHole");
+  if(t.holes.length){ hole.hidden=false; hole.textContent="穴："+t.holes.join("／")+"（本試験の穴埋め正答）"; } else hole.hidden=true;
+  document.getElementById("qWarn").hidden=!t.warn;
+  document.getElementById("qProg").style.width=((quiz.idx)/quiz.qs.length*100)+"%";
+  var prompt=document.getElementById("qPrompt"), main=document.getElementById("qMain");
+  if(q.dir==="t2d"){
+    prompt.textContent="次の用語について、正しい説明を選んでください。";
+    main.textContent=t.term; main.classList.add("term");
+  }else{
+    prompt.textContent="次の説明に当てはまる用語を選んでください。";
+    main.textContent=HINTS[t.term] || t.def; main.classList.remove("term");
+  }
+  var box=document.getElementById("qOpts"); box.innerHTML="";
+  q.opts.forEach(function(o){
+    var b=document.createElement("button");
+    b.className="opt"; b.textContent=o.txt;
+    b.addEventListener("click", function(){ answer(q, o, b); });
+    box.appendChild(b);
+  });
+  document.getElementById("qFb").innerHTML="";
+}
+function answer(q, chosen, btn){
+  if(q.answered) return;
+  q.answered=true; q.correct=chosen.ok; q.chosen=chosen.txt;
+  var t=q.term;
+  var s=store.stats[t.id] || {c:0,w:0};
+  if(chosen.ok){ s.c++; quiz.correctCount++; } else { s.w++; quiz.wrong.push(q); }
+  store.stats[t.id]=s; saveStore(); renderStats();
+  var btns=document.querySelectorAll("#qOpts .opt");
+  btns.forEach(function(b){
+    b.disabled=true;
+    var isAns = (q.dir==="t2d" ? b.textContent===t.def : b.textContent===t.term);
+    if(isAns) b.classList.add("correct");
+    else if(b===btn) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  document.getElementById("qProg").style.width=((quiz.idx+1)/quiz.qs.length*100)+"%";
+  var fb=document.getElementById("qFb");
+  var holeTxt = t.holes.length ? '<p><span class="pill">穴：'+esc(t.holes.join("／"))+'</span> 本試験で穴埋めの正答になった語です。</p>' : "";
+  var chosenTxt = chosen.ok ? "" : '<p>あなたの回答：'+esc(chosen.txt)+'</p>';
+  fb.innerHTML='<div class="fb '+(chosen.ok?"ok":"ng")+'"><h3>'+(chosen.ok?"正解":"不正解")+' ― '+esc(t.term)+'</h3>'
+    + chosenTxt
+    + '<p>'+esc(t.def)+'</p>' + holeTxt
+    + (t.warn ? '<p>⚠ この語には採点講評で指摘された重要知識が含まれます。</p>' : "")
+    + '</div><button class="nextbtn" id="nextBtn">'+(quiz.idx+1<quiz.qs.length?"次の問題へ":"結果を見る")+'</button>';
+  document.getElementById("nextBtn").addEventListener("click", function(){
+    quiz.idx++;
+    if(quiz.idx<quiz.qs.length) renderQuestion(); else showResult();
+  });
+  document.getElementById("nextBtn").focus();
+}
+function showResult(){
+  quizCard.hidden=true; resultCard.hidden=false;
+  var total=quiz.qs.length, c=quiz.correctCount;
+  document.getElementById("rScore").textContent=c+" / "+total;
+  document.getElementById("rSub").textContent=modeLabel()+" ・ 正答率 "+Math.round(c/total*100)+"%";
+  var ul=document.getElementById("rWrong"); ul.innerHTML="";
+  quiz.wrong.forEach(function(q){
+    var li=document.createElement("li");
+    li.innerHTML="<strong>"+esc(q.term.term)+"</strong> ― "+esc(q.term.def)+(q.chosen ? '<br><span style="color:var(--muted)">あなたの回答：'+esc(q.chosen)+"</span>" : "");
+    ul.appendChild(li);
+  });
+  document.getElementById("rPerfect").hidden = quiz.wrong.length>0;
+  store.history.unshift({date:new Date().toISOString(), mode:modeLabel(), total:total, correct:c});
+  if(store.history.length>50) store.history=store.history.slice(0,50);
+  saveStore(); renderStats();
+}
+document.getElementById("againBtn").addEventListener("click", function(){
+  resultCard.hidden=true; setupCard.hidden=false; updatePoolNote();
+});
+
+/* ---------- glossary ---------- */
+var gLayer=document.getElementById("gLayer");
+var allOpt=document.createElement("option"); allOpt.value=""; allOpt.textContent="すべてのレイヤー"; gLayer.appendChild(allOpt);
+layers.forEach(function(L){ var o=document.createElement("option"); o.value=L; o.textContent=L; gLayer.appendChild(o); });
+document.getElementById("gSearch").addEventListener("input", renderGloss);
+gLayer.addEventListener("change", renderGloss);
+function renderGloss(){
+  var q=(document.getElementById("gSearch").value||"").trim();
+  var L=gLayer.value;
+  var rows=TERMS.filter(function(t){
+    if(L && t.layer!==L) return false;
+    if(q && t.term.indexOf(q)<0 && t.def.indexOf(q)<0) return false;
+    return true;
+  });
+  document.getElementById("gCount").textContent=rows.length+" 語を表示しています。";
+  var tb=document.getElementById("gBody"); tb.innerHTML="";
+  rows.forEach(function(t){
+    var s=statOf(t.id), tot=s.c+s.w;
+    var acc = tot===0 ? '<span class="pill acc-none">未挑戦</span>'
+      : (s.w===0 ? '<span class="pill acc-ok">'+s.c+'/'+tot+' 正解</span>'
+                 : '<span class="pill acc-ng">'+s.c+'/'+tot+' ・ 間違い'+s.w+'回</span>');
+    var holes = t.holes.map(function(h){ return '<span class="pill">穴：'+esc(h)+'</span>'; }).join("");
+    var tr=document.createElement("tr");
+    tr.innerHTML='<td class="termcell">'+esc(t.term)+'</td><td class="defcell">'+esc(t.def)+(t.warn?' <span class="pill">⚠ 講評指摘</span>':"")+'</td><td>'+holes+acc+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+/* ---------- notes ---------- */
+(function(){
+  var box=document.getElementById("noteList");
+  NOTES.forEach(function(n){
+    var d=document.createElement("div"); d.className="notecard";
+    d.innerHTML='<div class="where">'+esc(n.layer||"")+(n.sub ? " ＞ "+esc(n.sub) : "")+'</div><div>'+esc(n.text.replace(/\*\*/g,""))+'</div>';
+    box.appendChild(d);
+  });
+})();
+
+/* ---------- record ---------- */
+function fmtDate(iso){
+  var d=new Date(iso);
+  return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+function renderRecord(){
+  var hl=document.getElementById("histList");
+  if(store.history.length===0){ hl.innerHTML='<p class="empty">まだテスト履歴がありません。</p>'; }
+  else{
+    hl.innerHTML="";
+    store.history.forEach(function(h){
+      var row=document.createElement("div"); row.className="histrow";
+      row.innerHTML="<span>"+esc(fmtDate(h.date))+"</span><span>"+esc(h.mode)+"</span><span><strong>"+h.correct+" / "+h.total+"</strong>（"+Math.round(h.correct/h.total*100)+"%）</span>";
+      hl.appendChild(row);
+    });
+  }
+  var wl=document.getElementById("weakList");
+  var weak=TERMS.filter(function(t){ return isWeak(t.id); });
+  if(weak.length===0){ wl.innerHTML='<p class="empty">苦手な語はまだありません。</p>'; }
+  else{
+    wl.innerHTML="";
+    var ul=document.createElement("ul"); ul.className="wronglist";
+    weak.forEach(function(t){
+      var s=statOf(t.id);
+      var li=document.createElement("li");
+      li.innerHTML="<strong>"+esc(t.term)+"</strong>（"+esc(t.layer)+"）― "+esc(t.def)+' <span class="pill acc-ng">間違い'+s.w+'回</span>';
+      ul.appendChild(li);
+    });
+    wl.appendChild(ul);
+  }
+}
+document.getElementById("resetBtn").addEventListener("click", function(){
+  store={stats:{}, history:[]}; saveStore(); renderStats(); renderRecord(); updatePoolNote();
+  document.getElementById("resetMsg").textContent="学習記録を消去しました。";
+});
+
+renderStats();
+updatePoolNote();
+</script>
+</body>
+</html>
