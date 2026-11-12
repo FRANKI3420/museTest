@@ -153,6 +153,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12.5px}
           <button data-count="30" aria-pressed="false">30問</button>
         </div>
       </div>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;cursor:pointer"><input type="checkbox" id="excludeAskedChk" style="width:20px;height:20px;min-height:0;accent-color:var(--accent)"> 一度出題した問題は出さない</label>
+        <p class="note">オンにすると、まだ一度も出ていない語だけが出題されます。選んだ範囲の未出題の残り語数も表示されます。「苦手だけ」モードは対象外です。表示された問題は、回答しなくても出題済みになります。</p>
+      </div>
       <p class="note">出題形式は「用語を見て正しい説明を選ぶ」と「説明を見て正しい用語を選ぶ」のミックスです。説明文の中に用語名そのものが入っている語は、答えが分かってしまうため「説明→用語」では出題しません。回答するとその場で正誤と定義が表示されます。</p>
       <p class="note" id="poolNote"></p>
       <button class="startbtn" id="startBtn">テスト開始</button>
@@ -251,9 +255,9 @@ var LS_KEY = "nesupe-glossary-ls-v1";
 function loadStore(){
   try{
     var raw = localStorage.getItem(LS_KEY);
-    if(raw){ var s = JSON.parse(raw); if(s && s.stats && s.history) return s; }
+    if(raw){ var s = JSON.parse(raw); if(s && s.stats && s.history){ if(!s.asked) s.asked={}; if(!s.settings) s.settings={}; return s; } }
   }catch(e){}
-  return { stats:{}, history:[] };
+  return { stats:{}, history:[], asked:{}, settings:{} };
 }
 var store = loadStore();
 function saveStore(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(store)); }catch(e){} }
@@ -302,6 +306,12 @@ tabs.forEach(function(b){
 
 /* ---------- quiz setup ---------- */
 var selMode="all", selCount=10;
+var excludeAsked = !!(store.settings && store.settings.excludeAsked);
+function effectivePool(){
+  var pool=poolFor();
+  if(excludeAsked && selMode!=="weak") pool=pool.filter(function(t){ return !store.asked[t.id]; });
+  return pool;
+}
 var modeSeg=document.getElementById("modeSeg");
 modeSeg.querySelectorAll("button").forEach(function(b){
   b.addEventListener("click", function(){
@@ -325,6 +335,13 @@ var layers=[]; TERMS.forEach(function(t){ if(layers.indexOf(t.layer)<0) layers.p
 var layerSel=document.getElementById("layerSel");
 layers.forEach(function(L){ var o=document.createElement("option"); o.value=L; o.textContent=L; layerSel.appendChild(o); });
 layerSel.addEventListener("change", updatePoolNote);
+var excludeChk=document.getElementById("excludeAskedChk");
+excludeChk.checked=excludeAsked;
+excludeChk.addEventListener("change", function(){
+  excludeAsked=excludeChk.checked;
+  if(!store.settings) store.settings={};
+  store.settings.excludeAsked=excludeAsked; saveStore(); updatePoolNote();
+});
 
 function poolFor(){
   if(selMode==="holes") return TERMS.filter(function(t){ return t.holes.length>0; });
@@ -347,8 +364,18 @@ function updatePoolNote(){
   if(pool.length===0){
     note.textContent="対象の語がまだありません。先に通常モードで解くと、間違えた語が「苦手」として溜まります。";
     btn.disabled=true;
+  }else if(excludeAsked && selMode!=="weak"){
+    var rest=pool.filter(function(t){ return !store.asked[t.id]; });
+    if(rest.length===0){
+      note.textContent="この範囲の語はすべて出題済みです。設定をオフにするか、記録タブから学習記録を消すとまた出題できます。";
+      btn.disabled=true;
+    }else{
+      note.textContent="対象は "+pool.length+" 語のうち未出題 "+rest.length+" 語です。"+Math.min(selCount,rest.length)+" 問を出題します。";
+      btn.disabled=false;
+    }
   }else{
-    note.textContent="対象は "+pool.length+" 語です。"+Math.min(selCount,pool.length)+" 問を出題します。";
+    var suffix=(excludeAsked && selMode==="weak") ? "（「一度出題した問題は出さない」は「苦手だけ」では適用されません。）" : "";
+    note.textContent="対象は "+pool.length+" 語です。"+Math.min(selCount,pool.length)+" 問を出題します。"+suffix;
     btn.disabled=false;
   }
 }
@@ -374,7 +401,7 @@ function pickDistractors(ans, dir){
   return picked;
 }
 function buildQuiz(){
-  var pool=shuffle(poolFor());
+  var pool=shuffle(effectivePool());
   var n=Math.min(selCount, pool.length);
   var qs=[];
   for(var i=0;i<n;i++){
@@ -400,6 +427,7 @@ document.getElementById("startBtn").addEventListener("click", function(){
 });
 function renderQuestion(){
   var q=quiz.qs[quiz.idx], t=q.term;
+  if(excludeAsked && selMode!=="weak" && !store.asked[t.id]){ store.asked[t.id]=true; saveStore(); }
   document.getElementById("qCount").textContent=(quiz.idx+1)+" / "+quiz.qs.length+" 問";
   document.getElementById("qCat").textContent=t.layer+(t.sub ? " ＞ "+t.sub : "");
   var hole=document.getElementById("qHole");
@@ -543,8 +571,8 @@ function renderRecord(){
   }
 }
 document.getElementById("resetBtn").addEventListener("click", function(){
-  store={stats:{}, history:[]}; saveStore(); renderStats(); renderRecord(); updatePoolNote();
-  document.getElementById("resetMsg").textContent="学習記録を消去しました。";
+  store={stats:{}, history:[], asked:{}, settings:{}}; excludeAsked=false; excludeChk.checked=false; saveStore(); renderStats(); renderRecord(); updatePoolNote();
+  document.getElementById("resetMsg").textContent="学習記録と出題済みの記録を消去しました。";
 });
 
 renderStats();
